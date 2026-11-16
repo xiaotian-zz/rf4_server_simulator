@@ -38,6 +38,8 @@ gateway:
   # 运行参数默认值，钓鱼限制可通过管理后台覆盖。
   token_ttl_days: 365                 # 登录 token 有效期（天）。
   userid_start: 1000001               # 登录服务分配的第一个 user ID。
+  accounts_fallback_ip: false         # 无凭据登录回退按来源 IP 分配 userid（旧行为，默认关）。
+                                      # 关闭时登录必须匹配管理后台创建的账号，不做自动注册。
   bite_probability: 1.0               # 每次抛竿出鱼的概率；1.0 表示每次都有鱼。
   bite_delay_scale: 1.0               # 标准咬钩延迟分布的倍率。
   bite_delay_fixed: 0                 # 固定咬钩延迟（秒）；大于 0 时不再使用分布。

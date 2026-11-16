@@ -241,6 +241,7 @@ body.notice-on #view-fish.on{height:max(600px,calc(100vh - 204px))}
       <button data-view="params" onclick="go('params')"><span class="ico"><svg viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1.5 14h5M9.5 8h5M17.5 16h5"/></svg></span><span class="txt"><b>游戏参数</b><small>玩法手感 · 经验结算倍率</small></span></button>
       <button data-view="release" onclick="go('release')"><span class="ico"><svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg></span><span class="txt"><b>发布说明</b><small>版本更新 · 修复内容</small></span></button>
       <button data-view="about" onclick="go('about')"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 10.5v5.5M12 7.5h.01"/></svg></span><span class="txt"><b>关于</b><small>项目说明 · README</small></span></button>
+      <button data-view="accounts" onclick="go('accounts')"><span class="ico"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M17 8h5M19.5 5.5v5"/></svg></span><span class="txt"><b>用户管理</b><small>登录账号 · 密码绑定存档</small></span></button>
       <button data-view="audit" onclick="go('audit')"><span class="ico"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg></span><span class="txt"><b>审计日志</b><small>后台每次操作的留痕</small></span></button>
     </nav>
     <div class="side-foot"><div class="u" id="who">admin</div><div class="m"><span class="status-dot"></span> 服务在线</div><button class="btn alt sm" onclick="logout()">退出登录</button></div>
@@ -265,6 +266,7 @@ body.notice-on #view-fish.on{height:max(600px,calc(100vh - 204px))}
     <section class="view" id="view-params"><div class="card"><div class="section-head"><h2>游戏参数</h2><small>保存后按参数类型生效；部分服务端参数约 30 秒生效，活动奖励必须重启游戏客户端并重新登录</small></div><div class="params-tabs" id="paramsTabs"></div><div id="paramsBody"></div></div></section>
     <section class="view" id="view-release"><div class="card release-card"><div class="section-head"><div><h2>发布说明</h2><p class="muted">读取发布包内的 发布说明.md</p></div><button class="btn alt sm" onclick="loadReleaseNotes()">刷新</button></div><div class="markdown-body release-markdown" id="releaseBody"><div class="empty">读取中…</div></div></div></section>
     <section class="view" id="view-about"><div class="card about-card"><div class="about-head"><div><h2>关于本项目</h2><p>内容来自 README.md · 优先读取本地文件</p></div><a class="btn alt sm" href="https://github.com/OpenFisherCommunity/rf4_server_simulator" target="_blank" rel="noreferrer">在 GitHub 查看</a></div><div class="markdown-body" id="aboutReadme"><div class="empty">读取中…</div></div></div></section>
+    <section class="view" id="view-accounts"><div class="split"><div style="display:flex;flex-direction:column;gap:16px;min-width:300px;max-width:460px"><div class="card"><div class="section-head"><h2>新建账号</h2></div><div class="field" style="margin-bottom:12px"><label>用户名</label><input id="accUser" placeholder="字母/数字/下划线"></div><div class="field" style="margin-bottom:14px"><label>密码</label><input id="accPass" type="password" placeholder="至少 8 位，含大写字母、小写字母和数字"></div><div class="actions"><button class="btn good" onclick="createAccount()">创建账号</button></div></div><div class="card"><div class="section-head"><h2>修改密码 / 删除</h2></div><p class="muted" style="margin:6px 0 14px;font-size:12px;line-height:1.6">输入已存在的账号用户名，或点击右侧列表中的“选中”自动填充。</p><div class="field" style="margin-bottom:12px"><label>用户名</label><input id="accUser2" placeholder="要操作的账号"></div><div class="field" style="margin-bottom:14px"><label>新密码</label><input id="accPass2" type="password" placeholder="仅重置密码时需要填写"></div><div class="actions"><button class="btn" onclick="resetAccountPass()">重置密码</button><button class="btn bad" onclick="deleteAccount()">删除账号</button></div></div></div><div class="card"><div class="section-head"><h2>账号列表</h2><small>密码不可见；UID = 绑定的玩家存档</small></div><div class="table-wrap" id="accTable" style="margin-top:12px"></div></div></div></section>
     <section class="view" id="view-audit"><div class="card"><div class="section-head"><h2>最近操作</h2><small>最新 200 条</small></div><div class="table-wrap" id="auditTable"></div></div></section>
   </main>
 </div>
@@ -344,7 +346,7 @@ async function boot(){
     const initial=location.hash.slice(1);go(titles[initial]?initial:'dashboard',true);if(!REFRESH_TIMER)REFRESH_TIMER=setInterval(()=>{if(!TOKEN)return;if(VIEW==='dashboard')loadDashboard(false).catch(()=>{});else if(VIEW==='players')loadPlayers(true).catch(()=>{})},8000);
   }catch(e){logout()}
 }
-const titles={dashboard:['总览','服务器正常吗 · 谁在玩 · 最近改了什么'],players:['玩家管理','档案 · 资产 · 背包 · 护鱼网 · 技能'],stores:['商店与库存','覆盖货架价格与库存，即时生效'],fish:['钓场与鱼口','玩法开关 · 各水域出什么鱼 · 咬钩快慢'],hooks:['钩子手感','真实型号 · 入口容量 · 咬口概率'],bait:['鱼饵偏好','每种鱼爱吃的饵料：规则表条目 + 饵效证据'],mail:['邮件','给玩家发消息和物品附件'],params:['游戏参数','玩法手感与经验结算倍率，随时可调回默认'],audit:['审计日志','后台每次操作的留痕'],release:['发布说明','发布包内的版本更新 · 修复内容'],about:['关于','项目说明 · README.md']};
+const titles={dashboard:['总览','服务器正常吗 · 谁在玩 · 最近改了什么'],players:['玩家管理','档案 · 资产 · 背包 · 护鱼网 · 技能'],stores:['商店与库存','覆盖货架价格与库存，即时生效'],fish:['钓场与鱼口','玩法开关 · 各水域出什么鱼 · 咬钩快慢'],hooks:['钩子手感','真实型号 · 入口容量 · 咬口概率'],bait:['鱼饵偏好','每种鱼爱吃的饵料：规则表条目 + 饵效证据'],mail:['邮件','给玩家发消息和物品附件'],params:['游戏参数','玩法手感与经验结算倍率，随时可调回默认'],accounts:['用户管理','游戏登录用户名/密码绑定玩家存档'],audit:['审计日志','后台每次操作的留痕'],release:['发布说明','发布包内的版本更新 · 修复内容'],about:['关于','项目说明 · README.md']};
 function go(name,fromHash=false){
   if(!titles[name])name='dashboard';
   VIEW=name;document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('on',b.dataset.view===name));
@@ -355,7 +357,7 @@ function go(name,fromHash=false){
 }
 window.addEventListener('hashchange',()=>go(location.hash.slice(1),true));
 function refreshCurrent(){
-  const jobs={dashboard:loadDashboard,players:()=>loadPlayers(false),stores:loadStores,fish:loadFishAreas,hooks:loadHookProfiles,bait:loadBaitPrefs,mail:()=>{},params:loadTunables,audit:loadAudit,release:loadReleaseNotes,about:loadAbout};
+  const jobs={dashboard:loadDashboard,players:()=>loadPlayers(false),stores:loadStores,fish:loadFishAreas,hooks:loadHookProfiles,bait:loadBaitPrefs,mail:()=>{},params:loadTunables,accounts:loadAccounts,audit:loadAudit,release:loadReleaseNotes,about:loadAbout};
   (jobs[VIEW]||(()=>{}))().catch(e=>toast(e.message,'bad'));
 }
 // 发放物品会偶发造成玩家坏档，暂时关闭前端入口；后端接口保留。
@@ -1245,6 +1247,32 @@ function askConfirm(title,body,cb){
   showModal(title,'危险操作',`<p style="margin:10px 0 4px;white-space:normal">${esc(body)}</p><p class="muted" style="margin:0 0 14px">此操作会记入审计日志。</p><div class="actions" style="justify-content:flex-end"><button class="btn alt" onclick="closeModal()">取消</button><button class="btn bad" onclick="runConfirm()">确认执行</button></div>`);
 }
 async function runConfirm(){const cb=CONFIRM_CB;CONFIRM_CB=null;closeModal();if(cb)await cb()}
+async function loadAccounts(){
+  const list=await api('/api/accounts');
+  const rows=list.length?list.map(a=>{
+    const unbound=!a.created_at;
+    const badge=unbound?'<span class="muted">未绑定（已有存档）</span>':`<button class="btn sm alt" onclick="pickAccount('${esc(a.username)}')">选中</button>`;
+    const time=unbound?'—':new Date(a.created_at*1000).toLocaleString();
+    return `<tr${unbound?' style="opacity:.55"':''}><td class="mono">${esc(a.username)}</td><td class="mono">${a.userid}</td><td class="muted">${time}</td><td>${badge}</td></tr>`;
+  }).join(''):'<tr><td colspan="4" class="muted">还没有账号，先在左侧创建</td></tr>';
+  $('#accTable').innerHTML='<table><thead><tr><th>用户名</th><th>UID</th><th>创建时间</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+function pickAccount(u){$('#accUser2').value=u;$('#accUser2').focus()}
+async function createAccount(){
+  const body={username:$('#accUser').value.trim(),password:$('#accPass').value,userid:0};
+  const r=await api('/api/accounts/create',{method:'POST',body:JSON.stringify(body)});
+  toast(`已创建 ${r.username} → UID ${r.userid}`,'good');$('#accPass').value='';loadAccounts();
+}
+async function resetAccountPass(){
+  await api('/api/accounts/password',{method:'POST',body:JSON.stringify({username:$('#accUser2').value.trim(),password:$('#accPass2').value})});
+  toast('密码已重置','good');$('#accPass2').value='';
+}
+async function deleteAccount(){
+  const u=$('#accUser2').value.trim();if(!u)return toast('先填用户名','bad');
+  if(!confirm(`删除账号 ${u}？只影响登录，不清除玩家存档。`))return;
+  await api('/api/accounts/delete',{method:'POST',body:JSON.stringify({username:u})});
+  toast('已删除','good');$('#accUser2').value='';loadAccounts();
+}
 async function loadAudit(){
   const list=await api('/api/audit?limit=200');
   $('#auditTable').innerHTML=`<table><thead><tr><th>时间</th><th>管理员</th><th>动作</th><th>对象</th><th>详情</th></tr></thead><tbody>${list.map(e=>`<tr><td>${timeText(e.TS??e.ts)}</td><td>${esc(e.Admin??e.admin)}</td><td><span class="tag blue">${esc(e.Action??e.action)}</span></td><td class="mono">${esc(e.Target??e.target)}</td><td style="white-space:normal;max-width:430px">${esc(e.Detail??e.detail)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">暂无记录</td></tr>'}</tbody></table>`;

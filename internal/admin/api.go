@@ -119,6 +119,10 @@ func NewServer(cfg config.Admin, db *store.DB, log logger, webFS fs.FS) *Server 
 	mux.HandleFunc("POST /api/fish/zones/delete", auth(s.handleFishZoneDelete))
 	mux.HandleFunc("POST /api/mail/send", auth(s.handleMailSend))
 	mux.HandleFunc("GET /api/audit", auth(s.handleAudit))
+	mux.HandleFunc("GET /api/accounts", auth(s.handleAccountList))
+	mux.HandleFunc("POST /api/accounts/create", auth(s.handleAccountCreate))
+	mux.HandleFunc("POST /api/accounts/password", auth(s.handleAccountPassword))
+	mux.HandleFunc("POST /api/accounts/delete", auth(s.handleAccountDelete))
 	mux.HandleFunc("GET /api/about", auth(s.handleAbout))
 	mux.HandleFunc("GET /api/release-notes", auth(s.handleReleaseNotes))
 
